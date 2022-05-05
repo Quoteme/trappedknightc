@@ -5,7 +5,7 @@ DESTDIR=/usr/local
 PREFIX=/bin
 
 trappedknight: trappedknight.c stack.c
-	$(CC) -g -o $@ trappedknight.c stack.c
+	$(CC) -g -o $@ ./trappedknight.c ./stack.c ./vec2d.c
 
 .PHONY: clean install
 

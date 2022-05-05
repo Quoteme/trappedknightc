@@ -2,18 +2,13 @@
 #define TRAPPEDKNIGHT
 
 #include "stack.h"
-
-struct Vec2d_i {
-  int x;
-  int y;
-};
-typedef struct Vec2d_i Vec2d_i;
+#include "vec2d.h"
 
 struct TrappedKnight {
   bool trapped;
   Vec2d_i step;
   Vec2d_i pos;
-  Stack_i *steps;
+  Stack_i *past;
 };
 typedef struct TrappedKnight TrappedKnight;
 

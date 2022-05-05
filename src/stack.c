@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdbool.h>
 #include "stack.h"
 
 /**
@@ -24,7 +25,7 @@ Stack_i *newStack(int val) {
  * @param val value to append to stack
  * @param s pointer to the stack which we will append to
  */
-void addToStack_i(int val, Stack_i *s) {
+void addToStack_i(Stack_i *s, int val) {
   while (s->next) {
     s = s->next;
   }
@@ -50,4 +51,20 @@ void freeStack_i(Stack_i *s) {
     ns = s->next;
     free(s);
   }
+}
+
+/**
+ * @brief check if a value is inside a given stack
+ *
+ * @param s pointer to the stack that should be checked
+ * @param val value to be searched for
+ * @return true/false if found or not
+ */
+bool checkInStack(Stack_i *s, int val){
+  Stack_i *tmp = s;
+  while (tmp) {
+    if (tmp->val==val) return true;
+    tmp = tmp->next;
+  }
+  return false;
 }

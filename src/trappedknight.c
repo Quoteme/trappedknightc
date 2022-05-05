@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <threads.h>
 #include "stack.h"
+#include "vec2d.h"
 #include "trappedknight.h"
 
 #define NUMOFKNIGHTS 100
@@ -46,17 +47,76 @@ TrappedKnight *newTrappedKnight(Vec2d_i start, Vec2d_i step){
   t->trapped = false;
   t->step = step;
   t->pos = start;
-  t->steps = newStack(spirale(start.x, start.y));
+  t->past = newStack(spirale(start.x, start.y));
   /* free(t); */
   return t;
 }
 
 void freeTrappedKnight(TrappedKnight* k){
-  freeStack_i(k->steps);
+  freeStack_i(k->past);
   free(k);
 }
 
 void *runTrappedKnight(TrappedKnight *k) {
+  // The position the knight will jump to next
+  Vec2d_i nextPos;
+  // The value of the position the knight will jump to next
+  int nextFieldNum;
+  // position the knight __might__ jump to
+  // Only used for calculations
+  Vec2d_i tmpPos;
+  // value of the field the knight __might__ jump to
+  // Only used for calculations
+  int tmpFieldNum;
+  // Step the knight might take
+  // Only used for calculations
+  Vec2d_i tmpStep;
+  bool nextPosAlreadyVisited = false;
+  while (!k->trapped) {
+    // We first want to find the position which can be jumped to,
+    // that has the smallest number as a spiral value,
+    // which has not been visited yet.
+    // After we have found this position and its value, we will append
+    // this value to the knights past stack and set his current position
+    // to this tile
+    tmpStep = k->step;
+    nextPos = addVec2d_i(k->pos, tmpStep);
+    nextFieldNum = spirale(nextPos.x, nextPos.y);
+    if (checkInStack(k->past, nextFieldNum)) nextPosAlreadyVisited=true;
+    // Try out all rotations
+    for (int i=1; i<4; i++) {
+      // rotate step by 90°
+      tmpStep = rotate90ccwVec2d_i(tmpStep);
+      tmpPos = addVec2d_i(k->pos, tmpStep);
+      tmpFieldNum = spirale(tmpPos.x, tmpPos.y);
+      if (checkInStack(k->past, tmpFieldNum)
+      && (tmpFieldNum<nextFieldNum || nextPosAlreadyVisited)) {
+        nextPos = tmpPos;
+        nextFieldNum = tmpFieldNum;
+      }
+    }
+    // Mirror and try with mirrored rotations
+    tmpStep = mirrorVertVec2d_i(k->step);
+    tmpPos = addVec2d_i(k->pos, tmpStep);
+    tmpFieldNum = spirale(tmpPos.x, tmpPos.y);
+    if (checkInStack(k->past, tmpFieldNum)
+    && (tmpFieldNum<nextFieldNum || nextPosAlreadyVisited)) {
+      nextPos = tmpPos;
+      nextFieldNum = tmpFieldNum;
+    }
+    // Try out all mirrored rotations
+    for (int i=1; i<4; i++) {
+      // rotate step by 90°
+      tmpStep = rotate90ccwVec2d_i(tmpStep);
+      tmpPos = addVec2d_i(k->pos, tmpStep);
+      tmpFieldNum = spirale(tmpPos.x, tmpPos.y);
+      if (checkInStack(k->past, tmpFieldNum)
+      && (tmpFieldNum<nextFieldNum || nextPosAlreadyVisited)) {
+        nextPos = tmpPos;
+        nextFieldNum = tmpFieldNum;
+      }
+    }
+  }
   thrd_exit(EXIT_SUCCESS);
 }
 
@@ -68,10 +128,10 @@ int main(int argc, char *argv[]) {
   /*   printf("\n"); */
   /* } */
   /* Stack_i *s = newStack(5); */
-  /* addToStack_i(6, s); */
-  /* addToStack_i(7, s); */
-  /* addToStack_i(8, s); */
-  /* addToStack_i(9, s); */
+  /* addToStack_i(s, 6); */
+  /* addToStack_i(s, 7); */
+  /* addToStack_i(s, 8); */
+  /* addToStack_i(s, 9); */
   /* freeStack_i(s); */
   TrappedKnight *k = newTrappedKnight(
     (Vec2d_i) {.x=0, .y=0},
