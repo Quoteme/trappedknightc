@@ -10,7 +10,7 @@
 #define NUMOFKNIGHTS 100
 
 #ifndef NUM_THREADS
-#define NUM_THREADS 4
+#define NUM_THREADS 1
 #endif
 
 int square(int x) { return x * x; }
@@ -57,7 +57,8 @@ void freeTrappedKnight(TrappedKnight* k){
   free(k);
 }
 
-void *runTrappedKnight(TrappedKnight *k) {
+void *runTrappedKnight(void *knight) {
+  TrappedKnight *k = (TrappedKnight*) knight;
   // The position the knight will jump to next
   Vec2d_i nextPos;
   // The value of the position the knight will jump to next
@@ -72,6 +73,7 @@ void *runTrappedKnight(TrappedKnight *k) {
   // Only used for calculations
   Vec2d_i tmpStep;
   bool nextPosAlreadyVisited = false;
+  printf("So far, so good!\n");
   while (!k->trapped) {
     // We first want to find the position which can be jumped to,
     // that has the smallest number as a spiral value,
@@ -82,27 +84,29 @@ void *runTrappedKnight(TrappedKnight *k) {
     tmpStep = k->step;
     nextPos = addVec2d_i(k->pos, tmpStep);
     nextFieldNum = spirale(nextPos.x, nextPos.y);
-    if (checkInStack(k->past, nextFieldNum)) nextPosAlreadyVisited=true;
+    if (!checkInStack(k->past, nextFieldNum)) nextPosAlreadyVisited=true;
     // Try out all rotations
     for (int i=1; i<4; i++) {
       // rotate step by 90°
       tmpStep = rotate90ccwVec2d_i(tmpStep);
       tmpPos = addVec2d_i(k->pos, tmpStep);
       tmpFieldNum = spirale(tmpPos.x, tmpPos.y);
-      if (checkInStack(k->past, tmpFieldNum)
+      if (!checkInStack(k->past, tmpFieldNum)
       && (tmpFieldNum<nextFieldNum || nextPosAlreadyVisited)) {
         nextPos = tmpPos;
         nextFieldNum = tmpFieldNum;
+        nextPosAlreadyVisited = false;
       }
     }
     // Mirror and try with mirrored rotations
     tmpStep = mirrorVertVec2d_i(k->step);
     tmpPos = addVec2d_i(k->pos, tmpStep);
     tmpFieldNum = spirale(tmpPos.x, tmpPos.y);
-    if (checkInStack(k->past, tmpFieldNum)
+    if (!checkInStack(k->past, tmpFieldNum)
     && (tmpFieldNum<nextFieldNum || nextPosAlreadyVisited)) {
       nextPos = tmpPos;
       nextFieldNum = tmpFieldNum;
+      nextPosAlreadyVisited = false;
     }
     // Try out all mirrored rotations
     for (int i=1; i<4; i++) {
@@ -110,14 +114,27 @@ void *runTrappedKnight(TrappedKnight *k) {
       tmpStep = rotate90ccwVec2d_i(tmpStep);
       tmpPos = addVec2d_i(k->pos, tmpStep);
       tmpFieldNum = spirale(tmpPos.x, tmpPos.y);
-      if (checkInStack(k->past, tmpFieldNum)
+      if (!checkInStack(k->past, tmpFieldNum)
       && (tmpFieldNum<nextFieldNum || nextPosAlreadyVisited)) {
         nextPos = tmpPos;
         nextFieldNum = tmpFieldNum;
+        nextPosAlreadyVisited = false;
       }
     }
+    if (!nextPosAlreadyVisited) break;
+    k->pos = nextPos;
+    addToStack_i(k->past, nextFieldNum);
   }
+  printf("The knight sadly died :(\n");
+  printf("His resting place is on: %d %d", k->pos.x, k->pos.y);
   thrd_exit(EXIT_SUCCESS);
+}
+
+void *printHello(void *thr_id) {
+    long tid;
+    tid = (long)thr_id;
+    printf("Hello There! thread #%ld, pthread ID - %lu\n", tid, thrd_current());
+    thrd_exit(EXIT_SUCCESS);
 }
 
 int main(int argc, char *argv[]) {
@@ -133,10 +150,20 @@ int main(int argc, char *argv[]) {
   /* addToStack_i(s, 8); */
   /* addToStack_i(s, 9); */
   /* freeStack_i(s); */
+  thrd_t threads[NUM_THREADS];
+  int rc;
   TrappedKnight *k = newTrappedKnight(
     (Vec2d_i) {.x=0, .y=0},
     (Vec2d_i) {.x=2, .y=1}
   );
+  for (long t; t<NUM_THREADS; t++) {
+    rc = thrd_create(&threads[t], (thrd_start_t) runTrappedKnight, (void *)k);
+    if (rc == thrd_error) {
+      printf("ERORR: thrd_create call failed\n");
+      exit(EXIT_FAILURE);
+    }
+    thrd_exit(EXIT_SUCCESS);
+  }
   freeTrappedKnight(k);
   return 0;
 }
