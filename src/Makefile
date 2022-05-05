@@ -4,8 +4,8 @@ LDIR =./lib
 DESTDIR=/usr/local
 PREFIX=/bin
 
-trappedknight: trappedknight.c
-	$(CC) -g -o $@ trappedknight.c
+trappedknight: trappedknight.c stack.c
+	$(CC) -g -o $@ trappedknight.c stack.c
 
 .PHONY: clean install
 
