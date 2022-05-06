@@ -73,7 +73,6 @@ void *runTrappedKnight(void *knight) {
   // Only used for calculations
   Vec2d_i tmpStep;
   bool nextPosAlreadyVisited = false;
-  printf("So far, so good!\n");
   while (!k->trapped) {
     // We first want to find the position which can be jumped to,
     // that has the smallest number as a spiral value,
@@ -128,13 +127,6 @@ void *runTrappedKnight(void *knight) {
   printf("The knight sadly died :(\n");
   printf("His resting place is on: %d %d", k->pos.x, k->pos.y);
   thrd_exit(EXIT_SUCCESS);
-}
-
-void *printHello(void *thr_id) {
-    long tid;
-    tid = (long)thr_id;
-    printf("Hello There! thread #%ld, pthread ID - %lu\n", tid, thrd_current());
-    thrd_exit(EXIT_SUCCESS);
 }
 
 int main(int argc, char *argv[]) {
