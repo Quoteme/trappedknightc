@@ -72,8 +72,9 @@ void *runTrappedKnight(void *knight) {
   // Step the knight might take
   // Only used for calculations
   Vec2d_i tmpStep;
-  bool nextPosAlreadyVisited = false;
+  bool nextPosAlreadyVisited = true;
   while (!k->trapped) {
+    printf("(%d, %d), val: %d\n",k->pos.x, k->pos.y,spirale(k->pos.x, k->pos.y));
     // We first want to find the position which can be jumped to,
     // that has the smallest number as a spiral value,
     // which has not been visited yet.
@@ -83,7 +84,7 @@ void *runTrappedKnight(void *knight) {
     tmpStep = k->step;
     nextPos = addVec2d_i(k->pos, tmpStep);
     nextFieldNum = spirale(nextPos.x, nextPos.y);
-    if (!checkInStack(k->past, nextFieldNum)) nextPosAlreadyVisited=true;
+    if (checkInStack(k->past, nextFieldNum)) nextPosAlreadyVisited=true;
     // Try out all rotations
     for (int i=1; i<4; i++) {
       // rotate step by 90°
@@ -120,7 +121,7 @@ void *runTrappedKnight(void *knight) {
         nextPosAlreadyVisited = false;
       }
     }
-    if (!nextPosAlreadyVisited) break;
+    if (nextPosAlreadyVisited) break;
     k->pos = nextPos;
     addToStack_i(k->past, nextFieldNum);
   }
