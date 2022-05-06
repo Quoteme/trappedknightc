@@ -124,7 +124,7 @@ void *runTrappedKnight(void *knight) {
     k->pos = nextPos;
     addToStack_i(k->past, nextFieldNum);
   }
-  printf("The knight sadly died :(\n");
+  printf("The knight which walks (%d, %d) sadly died :(\n", k->step.x, k->step.y);
   printf("His resting place is on: %d %d\n", k->pos.x, k->pos.y);
   printf("His journey took him : %d : steps.\n", stackSize(k->past));
   thrd_exit(EXIT_SUCCESS);
