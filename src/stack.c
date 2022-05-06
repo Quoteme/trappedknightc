@@ -68,3 +68,19 @@ bool checkInStack(Stack_i *s, int val){
   }
   return false;
 }
+
+/**
+ * @brief calculate the number of elements in a stack_i
+ *
+ * @param s pointer to stack
+ * @return number of elements inside stack
+ */
+int stackSize(Stack_i *s){
+  int i=0;
+  Stack_i *ns = s;
+  while (&(ns->val)!=NULL) {
+    ns = ns->next;
+    i++;
+  }
+  return i;
+}
