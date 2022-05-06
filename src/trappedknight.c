@@ -35,7 +35,7 @@ int spirale(int x, int y) {
     if (y < 0)
       return square(2 * (abs(y)) - 1) + abs(y) + x;
     else
-      return square(2 * (abs(y)) - 1) + 5 * abs(y) + x;
+      return square(2 * (abs(y)) - 1) + 5 * abs(y) - x;
   }
 }
 
