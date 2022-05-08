@@ -1,6 +1,6 @@
 # Trapped Knight C
 
-![trapped knight thumbnail](https://i.ytimg.com/an_webp/RGQe8waGJ4w/mqdefault_6s.webp?du=3000&sqp=COSr3pMG&rs=AOn4CLCEtcY9-MrDLbaK7HKv5ZHF2on8Kg)
+![trapped knight thumbnail](https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fi.ytimg.com%2Fvi%2FRGQe8waGJ4w%2Fmaxresdefault.jpg&f=1&nofb=1)
 
 This is [trapped knight](https://www.youtube.com/watch?v=RGQe8waGJ4w&t=133s)
 written in C. In ```./src/trappedknight.c``` you
