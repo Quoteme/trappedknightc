@@ -13,6 +13,8 @@
 #define NUM_THREADS 1
 #endif
 
+#define MAXKNIGHTSTEPS 50000
+
 int square(int x) { return x * x; }
 
 /**
@@ -73,7 +75,9 @@ void *runTrappedKnight(void *knight) {
   // Only used for calculations
   Vec2d_i tmpStep;
   bool nextPosAlreadyVisited = true;
-  while (!k->trapped) {
+  int stepsTaken = 0;
+  while (!k->trapped && stepsTaken<MAXKNIGHTSTEPS) {
+    stepsTaken++;
     // We first want to find the position which can be jumped to,
     // that has the smallest number as a spiral value,
     // which has not been visited yet.
@@ -124,9 +128,20 @@ void *runTrappedKnight(void *knight) {
     k->pos = nextPos;
     addToStack_i(k->past, nextFieldNum);
   }
-  printf("The knight which walks (%d, %d) sadly died :(\n", k->step.x, k->step.y);
-  printf("His resting place is on: %d %d\n", k->pos.x, k->pos.y);
-  printf("His journey took him : %d : steps.\n", stackSize(k->past));
+  if (stepsTaken==MAXKNIGHTSTEPS)
+    printf("knight (%d, %d) did not get trapped in %d steps.\n",
+      k->step.x,
+      k->step.y,
+      MAXKNIGHTSTEPS);
+  else
+   printf("knight (%d, %d) got trapped at step %d.",
+      k->step.x,
+      k->step.y,
+      stackSize(k->past));
+
+  /* printf("The knight which walks (%d, %d) sadly died :(\n", k->step.x, k->step.y); */
+  /* printf("His resting place is on: %d %d\n", k->pos.x, k->pos.y); */
+  /* printf("His journey took him : %d : steps.\n", stackSize(k->past)); */
   thrd_exit(EXIT_SUCCESS);
 }
 
