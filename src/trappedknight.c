@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <threads.h>
+#include <stdatomic.h>
 #include "stack.h"
 #include "vec2d.h"
 #include "trappedknight.h"
@@ -10,10 +11,10 @@
 #define NUMOFKNIGHTS 100
 
 #ifndef NUM_THREADS
-#define NUM_THREADS 1
+#define NUM_THREADS 16
 #endif
 
-#define MAXKNIGHTSTEPS 50000
+#define MAXKNIGHTSTEPS 15000
 
 int square(int x) { return x * x; }
 
@@ -59,8 +60,13 @@ void freeTrappedKnight(TrappedKnight* k){
   free(k);
 }
 
-void *runTrappedKnight(void *knight) {
-  TrappedKnight *k = (TrappedKnight*) knight;
+/**
+ * @brief Let a knigt run according to his rules. After this function
+ * is finished, the knight will have his past, trapped, position etc set
+ *
+ * @param k pointer to a knight
+ */
+void runTrappedKnight(TrappedKnight *k) {
   // The position the knight will jump to next
   Vec2d_i nextPos;
   // The value of the position the knight will jump to next
@@ -128,50 +134,64 @@ void *runTrappedKnight(void *knight) {
     k->pos = nextPos;
     addToStack_i(k->past, nextFieldNum);
   }
-  if (stepsTaken==MAXKNIGHTSTEPS)
+  if (stepsTaken==MAXKNIGHTSTEPS) {
     printf("knight (%d, %d) did not get trapped in %d steps.\n",
       k->step.x,
       k->step.y,
       MAXKNIGHTSTEPS);
-  else
-   printf("knight (%d, %d) got trapped at step %d.",
+  } else {
+    printf("knight (%d, %d) got trapped at step %d.\n",
       k->step.x,
       k->step.y,
       stackSize(k->past));
+    k->trapped = true;
+  }
+}
 
-  /* printf("The knight which walks (%d, %d) sadly died :(\n", k->step.x, k->step.y); */
-  /* printf("His resting place is on: %d %d\n", k->pos.x, k->pos.y); */
-  /* printf("His journey took him : %d : steps.\n", stackSize(k->past)); */
+struct ThreadData {
+  TrappedKnight *knights[NUMOFKNIGHTS];
+  atomic_bool runningKnights[NUMOFKNIGHTS];
+};
+typedef struct ThreadData ThreadData;
+
+int newThread(void *td){
+  ThreadData *d = (ThreadData*) td;
+  printf("thread started...\n");
+  int i=0;
+  while (i<NUMOFKNIGHTS) {
+    if (!d->runningKnights[i]) {
+      d->runningKnights[i] = true;
+      /* printf("running knight %d\n", i); */
+      runTrappedKnight(d->knights[i]);
+    }
+    i++;
+  }
+  /* runTrappedKnight(knights); */
   thrd_exit(EXIT_SUCCESS);
 }
 
 int main(int argc, char *argv[]) {
-  /* for (int i=0; i<5; i++) { */
-  /*   for (int j=0; j<5; j++) { */
-  /*     printf("%d ", spirale(j, i)); */
-  /*   } */
-  /*   printf("\n"); */
-  /* } */
-  /* Stack_i *s = newStack(5); */
-  /* addToStack_i(s, 6); */
-  /* addToStack_i(s, 7); */
-  /* addToStack_i(s, 8); */
-  /* addToStack_i(s, 9); */
-  /* freeStack_i(s); */
-  thrd_t threads[NUM_THREADS];
-  int rc;
-  TrappedKnight *k = newTrappedKnight(
-    (Vec2d_i) {.x=0, .y=0},
-    (Vec2d_i) {.x=2, .y=1}
-  );
-  for (long t; t<NUM_THREADS; t++) {
-    rc = thrd_create(&threads[t], (thrd_start_t) runTrappedKnight, (void *)k);
-    if (rc == thrd_error) {
-      printf("ERORR: thrd_create call failed\n");
-      exit(EXIT_FAILURE);
-    }
-    thrd_exit(EXIT_SUCCESS);
+  ThreadData td;
+  for (int i=0; i<NUMOFKNIGHTS; i++) {
+    td.knights[i] = newTrappedKnight(
+      (Vec2d_i) {.x=0, .y=0},
+      (Vec2d_i) {.x=i, .y=1}
+    );
   }
-  freeTrappedKnight(k);
+  thrd_t threads[NUM_THREADS];
+  int threadResult;
+  for (long i=0; i<NUM_THREADS; i++) {
+    thrd_create(&threads[i], newThread, (void*) &td);
+  }
+  for (long i=0; i<NUM_THREADS; i++) {
+    thrd_join(threads[i], &threadResult);
+  }
+  for (int i=0; i<NUMOFKNIGHTS; i++) {
+    freeTrappedKnight(td.knights[i]);
+  }
+  // check skipped knights
+  for (int i=0; i<NUMOFKNIGHTS; i++) {
+    if (!td.runningKnights[i]) printf("not called: %d", i);
+  }
   return 0;
 }
